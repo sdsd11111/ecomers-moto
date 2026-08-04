@@ -32,6 +32,32 @@ export async function fetchInstanceStatus(instanceName: string = DEFAULT_INSTANC
   }
 }
 
+const DEFAULT_WEBHOOK_URL = process.env.WEBHOOK_URL || "https://ecomers-moto.vercel.app/api/evolution/webhook";
+
+export async function setWebhook(instanceName: string = DEFAULT_INSTANCE, webhookUrl: string = DEFAULT_WEBHOOK_URL) {
+  try {
+    const res = await fetch(`${EVOLUTION_API_URL}/webhook/set/${instanceName}`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        webhook: {
+          enabled: true,
+          url: webhookUrl,
+          byEvents: false,
+          base64: false,
+          events: ["MESSAGES_UPSERT", "CONNECTION_UPDATE"],
+        },
+      }),
+      cache: "no-store",
+    });
+
+    const data = await res.json().catch(() => ({}));
+    return { success: res.ok, data };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
 export async function createInstance(instanceName: string = DEFAULT_INSTANCE) {
   try {
     const res = await fetch(`${EVOLUTION_API_URL}/instance/create`, {
@@ -47,6 +73,10 @@ export async function createInstance(instanceName: string = DEFAULT_INSTANCE) {
     });
 
     const data = await res.json();
+    
+    // Automatically configure Vercel Webhook URL
+    await setWebhook(instanceName);
+
     return { success: res.ok, data };
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -55,6 +85,9 @@ export async function createInstance(instanceName: string = DEFAULT_INSTANCE) {
 
 export async function getQrCode(instanceName: string = DEFAULT_INSTANCE) {
   try {
+    // Ensure Webhook is configured when fetching QR Code
+    await setWebhook(instanceName);
+
     const res = await fetch(`${EVOLUTION_API_URL}/instance/connect/${instanceName}`, {
       headers,
       cache: "no-store",
@@ -114,10 +147,13 @@ export async function resetAndCreateInstance(instanceName: string = DEFAULT_INST
     // 2. Create fresh instance
     const created = await createInstance(instanceName);
 
+    // 3. Configure Webhook
+    await setWebhook(instanceName);
+
     // Wait 1 second before fetching QR
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
-    // 3. Get fresh QR code
+    // 4. Get fresh QR code
     const qrResult = await getQrCode(instanceName);
     return { success: true, created, qr: qrResult.base64, data: qrResult.data };
   } catch (error: any) {
