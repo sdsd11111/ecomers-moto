@@ -1,11 +1,12 @@
-import { leads } from "@/data/motos";
+import { getLeads } from "@/lib/dbRepositories";
 
 const fmtPrice = (n: number) =>
   new Intl.NumberFormat("es-EC", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(n);
 const fmtDate = (iso: string) =>
   new Intl.DateTimeFormat("es-EC", { day: "2-digit", month: "short" }).format(new Date(iso));
 
-export default function AdminLeads() {
+export default async function AdminLeads() {
+  const leads = await getLeads();
   const sinContactar = leads.filter((l) => !l.contactado).length;
 
   return (

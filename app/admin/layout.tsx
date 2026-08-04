@@ -1,5 +1,7 @@
 import AdminAuthGuard from "@/components/admin/AdminAuthGuard";
 
+export const dynamic = "force-dynamic";
+
 export const metadata = {
   title: "Admin — Asfalto°",
 };

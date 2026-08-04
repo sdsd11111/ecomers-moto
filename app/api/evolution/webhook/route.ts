@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { generateAiResponse } from "@/lib/aiChatbot";
+import { generateAiResponseWithTools } from "@/lib/aiChatbot";
 import { saveConversacion, saveLead } from "@/lib/dbRepositories";
 
 const EVOLUTION_API_URL = (process.env.EVOLUTION_API_URL || "http://178.238.238.158:8080").replace(/\/$/, "");
@@ -47,8 +47,8 @@ export async function POST(request: Request) {
 
     console.log(`[WhatsApp Bot] Received message from allowed number ${cleanNumber} (${pushName}): "${textMessage}"`);
 
-    // Generate AI response with Groq
-    const aiReply = await generateAiResponse(textMessage, pushName);
+    // Generate AI response with Groq Tool Calling Engine
+    const { textReply, toolCallsExecuted } = await generateAiResponseWithTools(textMessage, cleanNumber, pushName);
 
     // Send response via Evolution API
     const sendRes = await fetch(`${EVOLUTION_API_URL}/message/sendText/${INSTANCE_NAME}`, {
@@ -64,7 +64,7 @@ export async function POST(request: Request) {
           presence: "composing",
         },
         textMessage: {
-          text: aiReply,
+          text: textReply,
         },
       }),
     });
@@ -79,11 +79,17 @@ export async function POST(request: Request) {
       telefono: cleanNumber,
       canal: "whatsapp",
       estado: "activa",
-      ultimoMensaje: aiReply,
+      ultimoMensaje: textReply,
       actualizadoEn: timestamp,
       mensajes: [
         { id: `m-${Date.now()}-1`, emisor: "cliente", texto: textMessage, hora: timestamp },
-        { id: `m-${Date.now()}-2`, emisor: "bot", texto: aiReply, hora: timestamp },
+        {
+          id: `m-${Date.now()}-2`,
+          emisor: "bot",
+          texto: textReply,
+          hora: timestamp,
+          toolCalls: toolCallsExecuted,
+        } as any,
       ],
     });
 
@@ -92,14 +98,14 @@ export async function POST(request: Request) {
       cliente: pushName,
       telefono: cleanNumber,
       origen: "whatsapp",
-      motoInteres: "Consulta por WhatsApp",
+      motoInteres: toolCallsExecuted.length > 0 ? `Herramientas: ${toolCallsExecuted.map((t) => t.toolName).join(", ")}` : "Consulta por WhatsApp",
       contactado: true,
     });
 
     return NextResponse.json({
       status: "success",
       repliedTo: cleanNumber,
-      reply: aiReply,
+      reply: textReply,
       sendResult: sendData,
     });
   } catch (error: any) {

@@ -48,14 +48,16 @@ export default function Home() {
             </Link>
           </div>
         </div>
-        <div className="relative aspect-[4/5] bg-gradient-to-b from-[#1a1a1c] to-ink overflow-hidden">
-          <svg viewBox="0 0 500 500" className="absolute inset-0 w-full h-full opacity-90">
-            <circle cx="130" cy="360" r="70" fill="none" stroke="#333" strokeWidth="14" />
-            <circle cx="370" cy="360" r="70" fill="none" stroke="#333" strokeWidth="14" />
-            <path d="M130 360 L230 220 L300 220 L370 360" fill="none" stroke="#555" strokeWidth="10" strokeLinecap="round" />
-            <path d="M230 220 L200 150 L260 150" fill="none" stroke="#555" strokeWidth="10" strokeLinecap="round" />
-          </svg>
-          <div className="relative z-10 m-6 mt-auto bg-white/[.08] backdrop-blur-sm border border-white/25 px-4.5 py-3.5 text-ivory font-mono text-xs flex gap-4 self-end">
+        <div className="relative aspect-[4/5] bg-gradient-to-b from-[#1a1a1c] to-ink overflow-hidden flex flex-col justify-between p-6">
+          <div className="flex-1 flex items-center justify-center relative">
+            <div className="absolute inset-0 bg-oxblood/10 blur-3xl rounded-full scale-75 pointer-events-none" />
+            <img
+              src="/logo-icon.svg"
+              alt="Logo Asfalto° Motos"
+              className="w-48 h-48 md:w-64 md:h-64 object-contain relative z-10 filter drop-shadow-[0_10px_20px_rgba(0,0,0,0.8)] opacity-95 hover:scale-105 transition-transform duration-700"
+            />
+          </div>
+          <div className="relative z-10 bg-white/[.08] backdrop-blur-sm border border-white/25 px-4.5 py-3.5 text-ivory font-mono text-xs flex justify-between gap-4">
             <div>
               <b className="block text-lg text-amber font-mono">62°</b>ángulo máx.
             </div>

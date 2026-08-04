@@ -123,3 +123,46 @@ export async function saveConversacion(conv: Partial<Conversacion>): Promise<voi
     console.error("Error saving conversacion to MySQL:", e);
   }
 }
+
+export interface UnidadResumen {
+  id: string;
+  nombre: string;
+  marca: string;
+  condicion: string;
+  anio: number;
+  km: number;
+  color: string;
+  chasis: string;
+  motorSerial: string;
+  estado: string;
+}
+
+export async function getUnidadesResumen(): Promise<UnidadResumen[]> {
+  try {
+    await initDb();
+    const [rows]: any = await pool.query(`
+      SELECT 
+        u.id, u.condicion, u.anio, u.km, u.color, u.chasis, u.motor_serial, u.estado,
+        m.nombre, m.marca
+      FROM unidades_inventario u
+      JOIN modelos_moto m ON u.modelo_id = m.id
+      ORDER BY u.estado ASC, m.nombre ASC
+    `);
+    if (!rows || rows.length === 0) return [];
+    return rows.map((r: any) => ({
+      id: r.id,
+      nombre: r.nombre,
+      marca: r.marca,
+      condicion: r.condicion,
+      anio: r.anio,
+      km: r.km,
+      color: r.color,
+      chasis: r.chasis || "",
+      motorSerial: r.motor_serial || "",
+      estado: r.estado,
+    }));
+  } catch (e) {
+    console.error("Error fetching unidades resumen:", e);
+    return [];
+  }
+}

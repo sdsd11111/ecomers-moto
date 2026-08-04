@@ -1,12 +1,13 @@
 import StatusBadge from "@/components/admin/StatusBadge";
-import { ventas } from "@/data/motos";
+import { getVentas } from "@/lib/dbRepositories";
 
 const fmtPrice = (n: number) =>
   new Intl.NumberFormat("es-EC", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(n);
 const fmtDate = (iso: string) =>
   new Intl.DateTimeFormat("es-EC", { day: "2-digit", month: "short" }).format(new Date(iso));
 
-export default function AdminVentas() {
+export default async function AdminVentas() {
+  const ventas = await getVentas();
   const total = ventas.filter((v) => v.estado === "vendida").reduce((s, v) => s + v.monto, 0);
 
   return (
