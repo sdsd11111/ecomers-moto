@@ -1,0 +1,62 @@
+@import "tailwindcss";
+
+:root {
+  --ink: #0e0e10;
+  --ivory: #f5f2ec;
+  --steel: #6b6b70;
+  --steel-light: #d8d6d0;
+  --oxblood: #7a1f2b;
+  --oxblood-light: #a63b47;
+  --chrome: #c9cbcf;
+  --amber: #e8a33d;
+  --success: #5fbf7b;
+}
+
+@theme inline {
+  --color-ink: var(--ink);
+  --color-ivory: var(--ivory);
+  --color-steel: var(--steel);
+  --color-steel-light: var(--steel-light);
+  --color-oxblood: var(--oxblood);
+  --color-oxblood-light: var(--oxblood-light);
+  --color-chrome: var(--chrome);
+  --color-amber: var(--amber);
+  --color-success: var(--success);
+
+  --font-display: var(--font-big-shoulders);
+  --font-body: var(--font-manrope);
+  --font-mono: var(--font-jetbrains);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--ivory);
+  color: var(--ink);
+  font-family: var(--font-body);
+}
+
+::selection {
+  background: var(--oxblood);
+  color: var(--ivory);
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--oxblood);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
