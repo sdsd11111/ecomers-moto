@@ -13,14 +13,14 @@ const TOOLS_SCHEMA = [
     type: "function",
     function: {
       name: "buscar_unidades",
-      description: "Busca motocicletas físicas disponibles en el inventario real de Asfalto° según categoría, precio máximo o condición.",
+      description: "Busca motocicletas físicas disponibles en el inventario real de Asfalto°. Solo llamar si el cliente solicita explícitamente ver el catálogo, modelos, opciones disponibles o presupuesto.",
       parameters: {
         type: "object",
         properties: {
-          categoria: { type: "string", description: "Categoría: sport, naked, adventure, cruiser, urbana, scooter, touring" },
-          precioMax: { type: "number", description: "Presupuesto máximo en USD" },
-          condicion: { type: "string", description: "nueva o seminueva" },
-          marca: { type: "string", description: "Marca de la moto" },
+          categoria: { type: "string", description: "Categoría: sport, naked, adventure, cruiser, urbana, scooter, touring. Omitir completamente este campo si el cliente no lo especificó. NUNCA enviar string vacío." },
+          precioMax: { type: "number", description: "Presupuesto máximo en USD como número (ejemplo 5000). Omitir completamente este campo si el cliente no lo especificó. NUNCA enviar string vacío ni texto." },
+          condicion: { type: "string", description: "nueva o seminueva. Omitir este campo si no lo especificó. NUNCA enviar string vacío." },
+          marca: { type: "string", description: "Marca de la moto. Omitir este campo si no lo especificó. NUNCA enviar string vacío." },
         },
       },
     },
@@ -47,9 +47,9 @@ const TOOLS_SCHEMA = [
       parameters: {
         type: "object",
         properties: {
-          precio: { type: "number", description: "Precio total de la moto en USD" },
-          cuotaInicialPct: { type: "number", description: "Porcentaje de entrada (por defecto 20%)" },
-          meses: { type: "number", description: "Plazo en meses (12, 24, 36, 48)" },
+          precio: { type: "number", description: "Precio total de la moto en USD como número. NUNCA enviar string vacío." },
+          cuotaInicialPct: { type: "number", description: "Porcentaje de entrada (por defecto 20%)." },
+          meses: { type: "number", description: "Plazo en meses (12, 24, 36, 48)." },
         },
         required: ["precio"],
       },
@@ -88,10 +88,36 @@ const TOOLS_SCHEMA = [
   },
 ];
 
+function sanitizeToolArguments(name: string, rawArgs: any) {
+  const clean = { ...rawArgs };
+  for (const key of Object.keys(clean)) {
+    if (clean[key] === "" || clean[key] === null || clean[key] === undefined) {
+      delete clean[key];
+    }
+  }
+  if (name === "buscar_unidades") {
+    if (clean.precioMax !== undefined) {
+      const num = Number(clean.precioMax);
+      if (isNaN(num) || num <= 0) {
+        delete clean.precioMax;
+      } else {
+        clean.precioMax = num;
+      }
+    }
+  }
+  return clean;
+}
+
 async function executeToolCall(toolCall: any, customerPhone: string) {
   const name = toolCall.function.name;
-  const args = JSON.parse(toolCall.function.arguments || "{}");
+  let rawArgs = {};
+  try {
+    rawArgs = JSON.parse(toolCall.function.arguments || "{}");
+  } catch (e) {
+    rawArgs = {};
+  }
 
+  const args = sanitizeToolArguments(name, rawArgs);
   console.log(`[Groq AI Tool Call Executing] -> ${name}(`, args, `)`);
 
   switch (name) {
@@ -102,7 +128,7 @@ async function executeToolCall(toolCall: any, customerPhone: string) {
       return await obtenerFichaUnidad(args.unidadId);
 
     case "calcular_financiamiento":
-      return calcularFinanciamiento(args.precio, args.cuotaInicialPct || 20, args.meses || 36);
+      return calcularFinanciamiento(args.precio || 5000, args.cuotaInicialPct || 20, args.meses || 36);
 
     case "crear_reserva":
       return await crearReservaAtomica(
@@ -136,12 +162,20 @@ export async function generateAiResponseWithTools(
     const systemPrompt = `
 Eres el asistente virtual vendedor experto de 'Asfalto°', un concesionario de motocicletas nuevas y seminuevas en Ecuador.
 
-REGLAS STRICTAS OBLIGATORIAS:
-- NUNCA inventes precios, disponibilidad, unidades físicas, chasis o datos técnicos. SIEMPRE usa las herramientas para consultar el sistema en tiempo real.
-- Si el cliente pregunta por motos o presupuesto, ejecuta la herramienta 'buscar_unidades'.
-- Cada unidad física es única. Si el cliente decide reservar o apartar una moto, confirma el precio y modelo, pide su nombre y ejecuta 'crear_reserva'.
-- Una reserva es un compromiso formal de 24 horas para que un asesor los contacte y cierren la compra.
-- Responde de forma amable, ejecutiva, directa y entusiasta.
+REGLAS STRICTAS Y EJEMPLOS OBLIGATORIOS:
+1. NUNCA ejecutes la herramienta 'buscar_unidades' ante saludos genéricos (ej: "Hola", "Buenas tardes", "Hola qué tal") o conversaciones iniciales sin intención concreta. Responde amablemente dando la bienvenida y preguntando qué tipo de moto busca.
+2. SOLO ejecuta 'buscar_unidades' cuando el cliente solicite explícitamente ver el catálogo, opciones de modelos, presupuestos específicos o categorías de motos.
+3. Si la herramienta requiere parámetros numéricos (como precioMax), pasa únicamente valores numéricos reales (ej: 5000). NUNCA envíes strings vacíos "". Si el cliente no especificó un precio, OMITE totalmente ese parámetro.
+
+EJEMPLOS DE COMPORTAMIENTO (Few-Shot):
+- Cliente: "Hola"
+  -> Respuesta: Saludo cordial y amable. NO llamar a buscar_unidades.
+- Cliente: "Quiero ver el catálogo"
+  -> Respuesta: Llamar a buscar_unidades({}).
+- Cliente: "Busco una moto de máximo 5000 dólares"
+  -> Respuesta: Llamar a buscar_unidades({ precioMax: 5000 }).
+- Cliente: "Tienen motos sport seminuevas?"
+  -> Respuesta: Llamar a buscar_unidades({ categoria: "sport", condicion: "seminueva" }).
 `;
 
     // Cargar historial previo guardado en MySQL
