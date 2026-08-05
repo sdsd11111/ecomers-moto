@@ -240,12 +240,27 @@ export async function crearReservaAtomica(
       [reservaId, unidadId, clienteId, conversacionId, expiraEn]
     );
 
-    // 6. Insertar Lead en pipeline
+    // 6. Consultar datos del modelo para registrar la venta en pipeline
+    const [modelRows]: any = await connection.query(
+      `SELECT m.id, m.nombre, m.precio_base FROM modelos_moto m WHERE m.id = ?`,
+      [unidad.modelo_id]
+    );
+    const motoNombre = modelRows && modelRows.length > 0 ? modelRows[0].nombre : `Unidad ${unidadId}`;
+    const monto = modelRows && modelRows.length > 0 ? Number(modelRows[0].precio_base) : 5000;
+
+    await connection.query(
+      `INSERT INTO ventas (id, cliente, telefono, moto_id, moto_nombre, monto, origen, estado, asesor)
+       VALUES (?, ?, ?, ?, ?, ?, 'whatsapp', 'reservada', 'Asistente Virtual AI')
+       ON DUPLICATE KEY UPDATE estado=VALUES(estado), monto=VALUES(monto)`,
+      [`venta-${cliente.telefono}`, cliente.nombre || "Cliente WhatsApp", cliente.telefono, unidad.modelo_id, motoNombre, monto]
+    );
+
+    // 7. Insertar Lead en pipeline
     await connection.query(
       `INSERT INTO leads (id, cliente, telefono, origen, moto_interes, contactado)
        VALUES (?, ?, ?, 'whatsapp', ?, 1)
-       ON DUPLICATE KEY UPDATE moto_interes=VALUES(moto_interes), contactado=1`,
-      [`lead-${cliente.telefono}`, cliente.nombre || "Cliente WhatsApp", cliente.telefono, `Reserva Unidad ${unidadId}`]
+       ON DUPLICATE KEY UPDATE cliente=VALUES(cliente), moto_interes=VALUES(moto_interes), contactado=1`,
+      [`lead-${cliente.telefono}`, cliente.nombre || "Cliente WhatsApp", cliente.telefono, `Reserva ${motoNombre} (ID: ${unidadId})`]
     );
 
     await connection.commit();
