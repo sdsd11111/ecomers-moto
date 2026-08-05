@@ -165,27 +165,44 @@ REGLAS STRICTAS OBLIGATORIAS:
       { role: "user", content: `Cliente (${customerName}, Teléfono: ${customerPhone}): "${userMessage}"` },
     ];
 
-    const initialRes = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${GROQ_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: "llama-3.3-70b-versatile",
-        messages: messagesHistory,
-        tools: TOOLS_SCHEMA,
-        tool_choice: "auto",
-        temperature: 0.5,
-        max_tokens: 600,
-      }),
+    // Función de llamada con 1 reintento automático (retry)
+    const callGroqWithRetry = async (bodyObj: any, retries: number = 1): Promise<Response> => {
+      for (let attempt = 0; attempt <= retries; attempt++) {
+        try {
+          const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${GROQ_API_KEY}`,
+            },
+            body: JSON.stringify(bodyObj),
+          });
+          if (res.ok || attempt === retries) return res;
+          console.warn(`[Groq AI] Reintento ${attempt + 1}/${retries} por status ${res.status}`);
+          await new Promise((r) => setTimeout(r, 1000));
+        } catch (e) {
+          if (attempt === retries) throw e;
+          console.warn(`[Groq AI] Reintento ${attempt + 1}/${retries} por error de red:`, e);
+          await new Promise((r) => setTimeout(r, 1000));
+        }
+      }
+      throw new Error("Límite de reintentos alcanzado");
+    };
+
+    const initialRes = await callGroqWithRetry({
+      model: "llama-3.3-70b-versatile",
+      messages: messagesHistory,
+      tools: TOOLS_SCHEMA,
+      tool_choice: "auto",
+      temperature: 0.5,
+      max_tokens: 600,
     });
 
     if (!initialRes.ok) {
-      const err = await initialRes.text();
-      console.error("Error inicial en Groq Tool Calling:", err);
+      const errText = await initialRes.text();
+      console.error("🚨 [ALERTA DE ERROR GROQ API]: Status", initialRes.status, errText);
       return {
-        textReply: "¡Hola! Bienvenido a Asfalto°. ¿Buscas una moto nueva o seminueva en particular?",
+        textReply: "Disculpa, tuvimos una interrupción técnica momentánea. En un momento un asesor humano revisará tu mensaje.",
         toolCallsExecuted: [],
       };
     }
@@ -195,7 +212,7 @@ REGLAS STRICTAS OBLIGATORIAS:
 
     if (!choice) {
       return {
-        textReply: "¡Hola! Gracias por comunicarte con Asfalto°. ¿En qué modelo estás interesado?",
+        textReply: "Disculpa, no pudimos procesar la respuesta. Un asesor se pondrá en contacto pronto.",
         toolCallsExecuted: [],
       };
     }
@@ -222,18 +239,11 @@ REGLAS STRICTAS OBLIGATORIAS:
       }
 
       // Segunda llamada a Groq con los resultados de las tools para generar la respuesta natural final al usuario
-      const followUpRes = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${GROQ_API_KEY}`,
-        },
-        body: JSON.stringify({
-          model: "llama-3.3-70b-versatile",
-          messages: messagesHistory,
-          temperature: 0.5,
-          max_tokens: 600,
-        }),
+      const followUpRes = await callGroqWithRetry({
+        model: "llama-3.3-70b-versatile",
+        messages: messagesHistory,
+        temperature: 0.5,
+        max_tokens: 600,
       });
 
       if (followUpRes.ok) {
@@ -251,9 +261,9 @@ REGLAS STRICTAS OBLIGATORIAS:
       toolCallsExecuted: [],
     };
   } catch (error) {
-    console.error("Error en motor de IA con Tool Calling:", error);
+    console.error("🚨 [ALERTA GENERAL AI ENGINE]:", error);
     return {
-      textReply: "Hola, bienvenido a Asfalto°. ¿En qué motocicleta estás interesado hoy?",
+      textReply: "Disculpa, nuestro sistema experimentó un inconveniente técnico. Un asesor comercial te contactará a la brevedad.",
       toolCallsExecuted: [],
     };
   }
