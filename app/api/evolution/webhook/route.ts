@@ -4,7 +4,7 @@ import { saveConversacion, saveLead } from "@/lib/dbRepositories";
 
 const EVOLUTION_API_URL = (process.env.EVOLUTION_API_URL || "http://178.238.238.158:8080").replace(/\/$/, "");
 const EVOLUTION_API_KEY = process.env.EVOLUTION_API_KEY || "";
-const ALLOWED_NUMBER = process.env.ALLOWED_WHATSAPP_NUMBER || "593982337491";
+const ALLOWED_NUMBER = process.env.ALLOWED_WHATSAPP_NUMBER || "593983237491";
 const INSTANCE_NAME = process.env.EVOLUTION_INSTANCE_NAME || "asfalto-motos";
 
 export async function POST(request: Request) {
