@@ -144,8 +144,24 @@ REGLAS STRICTAS OBLIGATORIAS:
 - Responde de forma amable, ejecutiva, directa y entusiasta.
 `;
 
+    // Cargar historial previo guardado en MySQL
+    const { getConversaciones } = await import("./dbRepositories");
+    const allConvs = await getConversaciones();
+    const existingConv = allConvs.find((c) => c.telefono === customerPhone || c.id === `conv-${customerPhone}`);
+    
+    const formattedHistory: any[] = [];
+    if (existingConv && existingConv.mensajes) {
+      for (const m of existingConv.mensajes.slice(-10)) { // últimos 10 mensajes
+        formattedHistory.push({
+          role: m.emisor === "cliente" ? "user" : "assistant",
+          content: m.texto,
+        });
+      }
+    }
+
     const messagesHistory: any[] = [
       { role: "system", content: systemPrompt },
+      ...formattedHistory,
       { role: "user", content: `Cliente (${customerName}, Teléfono: ${customerPhone}): "${userMessage}"` },
     ];
 
