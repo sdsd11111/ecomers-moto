@@ -48,10 +48,14 @@ export async function POST(request: Request) {
     console.log(`[WhatsApp Bot] Received message from allowed number ${cleanNumber} (${pushName}): "${textMessage}"`);
 
     // Generate AI response with Groq Tool Calling Engine
+    console.log(`[WhatsApp Bot] Calling Groq Tool Calling Engine for "${textMessage}"...`);
     const { textReply, toolCallsExecuted } = await generateAiResponseWithTools(textMessage, cleanNumber, pushName);
+    console.log(`[WhatsApp Bot] AI generated response: "${textReply}"`);
 
     // Send response via Evolution API
-    const sendRes = await fetch(`${EVOLUTION_API_URL}/message/sendText/${INSTANCE_NAME}`, {
+    const sendUrl = `${EVOLUTION_API_URL}/message/sendText/${INSTANCE_NAME}`;
+    console.log(`[WhatsApp Bot] Sending response via Evolution API to ${sendUrl}...`);
+    const sendRes = await fetch(sendUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -70,6 +74,7 @@ export async function POST(request: Request) {
     });
 
     const sendData = await sendRes.json().catch(() => ({}));
+    console.log(`[WhatsApp Bot] Evolution sendText result status ${sendRes.status}:`, JSON.stringify(sendData));
 
     // Save conversation & lead in MySQL database
     const timestamp = new Date().toISOString();
