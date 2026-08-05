@@ -71,6 +71,31 @@ export async function POST(request: Request) {
     const sendData = await sendRes.json().catch(() => ({}));
     console.log(`[WhatsApp Bot] Evolution sendText result status ${sendRes.status}:`, JSON.stringify(sendData));
 
+    // Si la conversación involucró mostrar el catálogo o ficha, enviamos también la foto oficial de la moto
+    const lowerMsg = textMessage.toLowerCase();
+    if (lowerMsg.includes("catalogo") || lowerMsg.includes("catálogo") || lowerMsg.includes("moto") || lowerMsg.includes("opciones") || lowerMsg.includes("5") || lowerMsg.includes("1")) {
+      const sendMediaUrl = `${EVOLUTION_API_URL}/message/sendMedia/${INSTANCE_NAME}`;
+      const mediaUrl = "https://ecomers-moto.vercel.app/motos/cruiser.png";
+      console.log(`[WhatsApp Bot] Sending motorcycle image via Evolution API: ${mediaUrl}...`);
+
+      fetch(sendMediaUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          apikey: EVOLUTION_API_KEY,
+        },
+        body: JSON.stringify({
+          number: cleanNumber,
+          mediaMessage: {
+            mediatype: "image",
+            caption: "🏍️ *Rasgo 650* - ¡Tu próxima moto de aventuras!",
+            media: mediaUrl,
+          },
+          delay: 1500,
+        }),
+      }).catch((e) => console.error("Error enviando imagen de la moto:", e));
+    }
+
     // Save conversation & lead in MySQL database
     const timestamp = new Date().toISOString();
     await saveConversacion({
