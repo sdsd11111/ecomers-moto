@@ -86,11 +86,9 @@ export async function POST(request: Request) {
         },
         body: JSON.stringify({
           number: cleanNumber,
-          mediaMessage: {
-            mediatype: "image",
-            caption: "🏍️ *Rasgo 650* - ¡Tu próxima moto de aventuras!",
-            media: mediaUrl,
-          },
+          mediatype: "image",
+          media: mediaUrl,
+          caption: "🏍️ *Rasgo 650* - ¡Tu próxima moto de aventuras!",
           delay: 1500,
         }),
       }).catch((e) => console.error("Error enviando imagen de la moto:", e));

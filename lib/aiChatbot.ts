@@ -172,7 +172,7 @@ REGLAS DEL FLUJO MVP DE VENTA (1 SOLA MOTO DESTACADA):
 2. CATÁLOGO / MOSTRAR MOTO: Cuando pida ver el catálogo u opciones, presenta la 'Rasgo 650' nueva 🏍️💨 ($5,140, 391 cc, 39 HP, Rojo Carbón). Detalla sus specs de forma irresistible y ofrece reservarla por 24h o calcular financiamiento. Menciona que le adjuntas su imagen oficial 📸.
 3. SELECCIÓN O RESPUESTAS CORTAS: Si el cliente responde un número (ej: "1", "5"), o "la quiero", "me interesa", asume que es la 'Rasgo 650'. Ofrécele apartarla por 24h pidiendo su nombre.
 4. FINANCIAMIENTO: Si pide cuotas o entrada, calcula usando la tool 'calcular_financiamiento' y presenta los montos súper claros con emojis (💰 Entrada, 📅 Cuota mensual).
-5. RESERVA ATÓMICA: Si da su nombre o confirma apartar, ejecuta 'crear_reserva' (unidadId: 'unit-moto-008-1').
+5. RESERVA ATÓMICA: Si da su nombre o confirma apartar, ejecuta 'crear_reserva' (unidadId: 'unit-moto-005-1').
 `;
 
     // Cargar historial previo guardado en MySQL
