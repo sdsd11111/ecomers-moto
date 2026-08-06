@@ -54,8 +54,8 @@ export interface FiltrosCatalogo {
 // Dominio: Admin — ventas, leads, conversaciones
 // ============================================================
 
-export type OrigenVenta = "whatsapp" | "web-chat" | "showroom" | "web-catalogo";
-export type EstadoVenta = "lead-nuevo" | "cotizacion" | "test-drive" | "vendida" | "perdida";
+export type OrigenVenta = "whatsapp" | "web-chat" | "showroom" | "web-catalogo" | "checkout_web";
+export type EstadoVenta = "lead-nuevo" | "cotizacion" | "test-drive" | "vendida" | "perdida" | "pendiente_transferencia";
 
 export interface Venta {
   id: string;

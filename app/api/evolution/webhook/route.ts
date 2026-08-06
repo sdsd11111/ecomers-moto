@@ -71,12 +71,41 @@ export async function POST(request: Request) {
     const sendData = await sendRes.json().catch(() => ({}));
     console.log(`[WhatsApp Bot] Evolution sendText result status ${sendRes.status}:`, JSON.stringify(sendData));
 
-    // Si la conversación involucró mostrar el catálogo o ficha, enviamos también la foto oficial de la moto
+    // Si la conversación involucró mostrar el catálogo, motos u opciones, enviamos la foto oficial de la moto
     const lowerMsg = textMessage.toLowerCase();
-    if (lowerMsg.includes("catalogo") || lowerMsg.includes("catálogo") || lowerMsg.includes("moto") || lowerMsg.includes("opciones") || lowerMsg.includes("5") || lowerMsg.includes("1")) {
+    const isCatalogInquiry =
+      lowerMsg.includes("catalogo") ||
+      lowerMsg.includes("catálogo") ||
+      lowerMsg.includes("moto") ||
+      lowerMsg.includes("opciones") ||
+      lowerMsg.includes("ver") ||
+      lowerMsg.includes("ficha") ||
+      lowerMsg.includes("5") ||
+      lowerMsg.includes("1") ||
+      toolCallsExecuted.some((t) => t.toolName === "buscar_unidades" || t.toolName === "obtener_ficha");
+
+    if (isCatalogInquiry) {
       const sendMediaUrl = `${EVOLUTION_API_URL}/message/sendMedia/${INSTANCE_NAME}`;
-      const mediaUrl = "https://ecomers-moto.vercel.app/motos/cruiser.png";
-      console.log(`[WhatsApp Bot] Sending motorcycle image via Evolution API: ${mediaUrl}...`);
+      
+      // Obtener URL de imagen o fallback
+      let imageUrl = "https://ecomers-moto.vercel.app/motos/cruiser.png";
+      let captionText = "🏍️ *Rasgo 650* - ¡Tu próxima moto de aventuras!";
+
+      // Si la tool trajo unidades con imagen, usar la primera
+      const searchTool = toolCallsExecuted.find((t) => t.toolName === "buscar_unidades" || t.toolName === "obtener_ficha");
+      if (searchTool && Array.isArray(searchTool.output) && searchTool.output.length > 0) {
+        const moto = searchTool.output[0];
+        if (moto.imagen_principal) {
+          imageUrl = moto.imagen_principal.startsWith("http")
+            ? moto.imagen_principal
+            : `https://ecomers-moto.vercel.app${moto.imagen_principal}`;
+        }
+        if (moto.nombre) {
+          captionText = `🏍️ *${moto.nombre}* - Precio: $${moto.precio?.toLocaleString() || "5,140"}`;
+        }
+      }
+
+      console.log(`[WhatsApp Bot] Sending motorcycle image via Evolution API: ${imageUrl}...`);
 
       fetch(sendMediaUrl, {
         method: "POST",
@@ -87,8 +116,8 @@ export async function POST(request: Request) {
         body: JSON.stringify({
           number: cleanNumber,
           mediatype: "image",
-          media: mediaUrl,
-          caption: "🏍️ *Rasgo 650* - ¡Tu próxima moto de aventuras!",
+          media: imageUrl,
+          caption: captionText,
           delay: 1500,
         }),
       }).catch((e) => console.error("Error enviando imagen de la moto:", e));

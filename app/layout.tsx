@@ -31,6 +31,10 @@ export const metadata: Metadata = {
   },
 };
 
+import { CartProvider } from "@/context/CartContext";
+import CartDrawer from "@/components/cart/CartDrawer";
+import CheckoutModal from "@/components/cart/CheckoutModal";
+
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
@@ -39,7 +43,11 @@ export default function RootLayout({
       <body
         className={`${bigShoulders.variable} ${manrope.variable} ${jetbrains.variable} antialiased bg-ivory text-ink`}
       >
-        {children}
+        <CartProvider>
+          {children}
+          <CartDrawer />
+          <CheckoutModal />
+        </CartProvider>
       </body>
     </html>
   );

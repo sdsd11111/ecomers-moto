@@ -6,6 +6,7 @@ import ChatWidget from "@/components/layout/ChatWidget";
 import MotoThumb from "@/components/catalog/MotoThumb";
 import ProductCard from "@/components/catalog/ProductCard";
 import BackButton from "@/components/ui/BackButton";
+import AddToCartButton from "@/components/cart/AddToCartButton";
 import { motos } from "@/data/motos";
 
 const fmtPrice = (n: number) =>
@@ -98,18 +99,16 @@ export default async function MotoDetailPage({
               )}
             </div>
 
-            <div className="flex gap-3.5 mt-6">
+            <div className="flex flex-wrap gap-3.5 mt-6">
+              <AddToCartButton moto={moto} />
               <a
-                href={`https://wa.me/593990000000?text=${encodeURIComponent(`Hola, me interesa la ${moto.nombre} (${fmtPrice(moto.precio)})`)}`}
+                href={`https://wa.me/593983237491?text=${encodeURIComponent(`Hola, me interesa comprar la ${moto.nombre} (${fmtPrice(moto.precio)})`)}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="bg-ink text-ivory px-7 py-4 text-sm font-semibold hover:bg-oxblood transition-colors"
+                className="bg-ink text-ivory px-7 py-4 text-sm font-semibold hover:bg-oxblood transition-colors rounded-xl flex items-center gap-2"
               >
-                Consultar por WhatsApp →
+                <span>Consultar por WhatsApp →</span>
               </a>
-              <button className="border border-steel-light px-7 py-4 text-sm font-semibold hover:border-ink transition-colors">
-                Agendar prueba de manejo
-              </button>
             </div>
 
             {/* Financiamiento */}

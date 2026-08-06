@@ -10,6 +10,9 @@
   --chrome: #c9cbcf;
   --amber: #e8a33d;
   --success: #5fbf7b;
+  --charcoal: #18181b;
+  --ash: #8e8e93;
+  --silver: #e5e5ea;
 }
 
 @theme inline {
@@ -22,6 +25,9 @@
   --color-chrome: var(--chrome);
   --color-amber: var(--amber);
   --color-success: var(--success);
+  --color-charcoal: var(--charcoal);
+  --color-ash: var(--ash);
+  --color-silver: var(--silver);
 
   --font-display: var(--font-big-shoulders);
   --font-body: var(--font-manrope);
