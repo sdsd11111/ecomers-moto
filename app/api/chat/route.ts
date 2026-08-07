@@ -40,7 +40,7 @@ export async function POST(request: Request) {
       ],
     });
 
-    if (phone !== "web-visitante") {
+    if (phone !== "web-visitante" && phone.length > 5) {
       await saveLead({
         id: `lead-web-${phone}`,
         cliente: name,
