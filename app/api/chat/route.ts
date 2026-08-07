@@ -65,7 +65,10 @@ export async function POST(request: Request) {
       }
     }
 
-    if (!imageUrl && (message.toLowerCase().includes("rasgo") || message.toLowerCase().includes("moto") || message.toLowerCase().includes("catalogo") || message.toLowerCase().includes("catálogo"))) {
+    // Garantizar que la imagen nunca se envíe nula o rota cuando el usuario o bot hablan de motos o fotos
+    const lower = message.toLowerCase();
+    const replyLower = textReply.toLowerCase();
+    if (!imageUrl && (lower.includes("moto") || lower.includes("rasgo") || lower.includes("foto") || lower.includes("si") || lower.includes("quiero") || lower.includes("reservar") || replyLower.includes("foto") || replyLower.includes("aprecies"))) {
       imageUrl = "/motos/cruiser.png";
     }
 
