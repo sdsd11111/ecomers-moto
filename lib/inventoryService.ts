@@ -222,22 +222,36 @@ export async function crearReservaAtomica(
       [clienteId, cliente.nombre || "Cliente WhatsApp", cliente.telefono, cliente.email || null]
     );
 
-    // 3. Expiración a 24 Horas
-    const expiraEn = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 19).replace("T", " ");
+    // 3. Expiración a 24 Horas en Hora de Ecuador (America/Guayaquil GMT-5)
+    const expiraDate = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    // Convertir a hora de Ecuador (UTC-5)
+    const ecOffsetMs = 5 * 60 * 60 * 1000;
+    const expiraEc = new Date(expiraDate.getTime() - ecOffsetMs);
+    const expiraEnDb = expiraEc.toISOString().slice(0, 19).replace("T", " ");
+
+    const expiraEnFormateada = new Intl.DateTimeFormat("es-EC", {
+      timeZone: "America/Guayaquil",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    }).format(expiraDate);
 
     // 4. Actualizar estado de la unidad física a 'reservada'
     await connection.query(
       `UPDATE unidades_inventario 
        SET estado = 'reservada', reservado_por_conversacion_id = ?, reservado_hasta = ?, version = version + 1
        WHERE id = ?`,
-      [conversacionId || `conv-${cliente.telefono}`, expiraEn, unidadId]
+      [conversacionId || `conv-${cliente.telefono}`, expiraEnDb, unidadId]
     );
 
     // 5. Insertar registro formal de reserva
     await connection.query(
       `INSERT INTO reservas (id, unidad_id, cliente_id, conversacion_id, estado, expira_en)
        VALUES (?, ?, ?, ?, 'activa', ?)`,
-      [reservaId, unidadId, clienteId, conversacionId, expiraEn]
+      [reservaId, unidadId, clienteId, conversacionId, expiraEnDb]
     );
 
     // 6. Consultar datos del modelo para registrar la venta en pipeline
@@ -270,8 +284,8 @@ export async function crearReservaAtomica(
       success: true,
       reservaId,
       unidadId,
-      expiraEn,
-      mensaje: `¡Reserva creada exitosamente por 24 horas! La unidad ha quedado apartada hasta el ${expiraEn}. Un asesor comercial se pondrá en contacto para afinar detalles de pago o financiamiento.`,
+      expiraEn: expiraEnFormateada,
+      mensaje: `¡Reserva creada exitosamente por 24 horas! La unidad ha quedado apartada hasta el ${expiraEnFormateada}. Un asesor comercial se pondrá en contacto para afinar detalles de pago o financiamiento.`,
     };
   } catch (error: any) {
     await connection.rollback();
