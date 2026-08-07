@@ -84,31 +84,30 @@ export async function buscarUnidadesFisicas(params: {
     const [rows]: any = await pool.query(query, values);
 
     if (!rows || rows.length === 0) {
-      // Fallback a motos locales si la tabla de unidades aún no tiene datos
+      // Fallback inteligente: retornar las motos del catálogo que más se acerquen o estén disponibles
       const local = await getMotos();
-      return local
-        .filter((m) => {
-          if (params.categoria && params.categoria !== "todas" && m.categoria !== params.categoria) return false;
-          if (params.condicion && params.condicion !== "todas" && m.condicion !== params.condicion) return false;
-          if (params.precioMax && m.precio > params.precioMax) return false;
-          return true;
-        })
-        .slice(0, 5)
-        .map((m) => ({
-          unidad_id: `unit-${m.id}-1`,
-          modelo_id: m.id,
-          nombre: m.nombre,
-          marca: m.marca,
-          categoria: m.categoria,
-          condicion: m.condicion,
-          precio: m.precio,
-          cilindrada: m.cilindrada,
-          potencia: m.potencia,
-          color: m.color,
-          anio: m.anio,
-          km: m.km,
-          estado: "disponible",
-        }));
+      const filtered = local.filter((m) => {
+        if (params.categoria && params.categoria !== "todas" && m.categoria !== params.categoria) return false;
+        if (params.condicion && params.condicion !== "todas" && m.condicion !== params.condicion) return false;
+        return true;
+      });
+      const list = filtered.length > 0 ? filtered : local;
+      return list.slice(0, 5).map((m) => ({
+        unidad_id: `unit-${m.id}-1`,
+        modelo_id: m.id,
+        nombre: m.nombre,
+        marca: m.marca,
+        categoria: m.categoria,
+        condicion: m.condicion,
+        precio: m.precio,
+        cilindrada: m.cilindrada,
+        potencia: m.potencia,
+        color: m.color,
+        anio: m.anio,
+        km: m.km,
+        imagenPrincipal: m.imagenPrincipal || "/motos/cruiser.png",
+        estado: "disponible",
+      }));
     }
 
     return rows.map((r: any) => ({
