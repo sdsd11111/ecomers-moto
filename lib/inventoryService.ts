@@ -23,6 +23,7 @@ export async function liberarReservasExpiradas() {
 
 export async function buscarUnidadesFisicas(params: {
   categoria?: string;
+  precioMin?: number;
   precioMax?: number;
   condicion?: string;
   marca?: string;
@@ -68,6 +69,10 @@ export async function buscarUnidadesFisicas(params: {
     if (params.marca && params.marca !== "todas") {
       query += " AND LOWER(m.marca) = LOWER(?)";
       values.push(params.marca);
+    }
+    if (params.precioMin && params.precioMin > 0) {
+      query += " AND m.precio_base >= ?";
+      values.push(params.precioMin);
     }
     if (params.precioMax && params.precioMax > 0) {
       query += " AND m.precio_base <= ?";

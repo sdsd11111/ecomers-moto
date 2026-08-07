@@ -13,14 +13,15 @@ const TOOLS_SCHEMA = [
     type: "function",
     function: {
       name: "buscar_unidades",
-      description: "Busca motocicletas físicas disponibles en el inventario real de Asfalto°. Solo llamar si el cliente solicita explícitamente ver el catálogo, modelos, opciones disponibles o presupuesto.",
+      description: "Busca motocicletas físicas disponibles en el inventario real de Asfalto° según rango de precios, categoría, marca o condición.",
       parameters: {
         type: "object",
         properties: {
-          categoria: { type: "string", description: "Categoría: sport, naked, adventure, cruiser, urbana, scooter, touring. Omitir completamente este campo si el cliente no lo especificó. NUNCA enviar string vacío." },
-          precioMax: { type: "number", description: "Presupuesto máximo en USD como número (ejemplo 5000). Omitir completamente este campo si el cliente no lo especificó. NUNCA enviar string vacío ni texto." },
-          condicion: { type: "string", description: "nueva o seminueva. Omitir este campo si no lo especificó. NUNCA enviar string vacío." },
-          marca: { type: "string", description: "Marca de la moto. Omitir este campo si no lo especificó. NUNCA enviar string vacío." },
+          categoria: { type: "string", description: "Categoría: sport, naked, adventure, cruiser, urbana, scooter, touring. Omitir completamente si no se especificó." },
+          precioMin: { type: "number", description: "Presupuesto mínimo en USD (ejemplo 1000). Omitir completamente si no se especificó." },
+          precioMax: { type: "number", description: "Presupuesto máximo en USD (ejemplo 3000). Omitir completamente si no se especificó." },
+          condicion: { type: "string", description: "nueva o seminueva. Omitir completamente si no se especificó." },
+          marca: { type: "string", description: "Marca de la moto. Omitir completamente si no se especificó." },
         },
       },
     },
@@ -96,13 +97,15 @@ function sanitizeToolArguments(name: string, rawArgs: any) {
     }
   }
   if (name === "buscar_unidades") {
+    if (clean.precioMin !== undefined) {
+      const num = Number(clean.precioMin);
+      if (isNaN(num) || num <= 0) delete clean.precioMin;
+      else clean.precioMin = num;
+    }
     if (clean.precioMax !== undefined) {
       const num = Number(clean.precioMax);
-      if (isNaN(num) || num <= 0) {
-        delete clean.precioMax;
-      } else {
-        clean.precioMax = num;
-      }
+      if (isNaN(num) || num <= 0) delete clean.precioMax;
+      else clean.precioMax = num;
     }
   }
   return clean;
@@ -163,18 +166,21 @@ export async function generateAiResponseWithTools(
 Eres el asistente virtual vendedor experto de 'Asfalto°' 🏍️, concesionario premium de motocicletas en Ecuador.
 
 REGLAS DE ESTILO Y FORMATO OBLIGATORIAS:
-- Usa emojis atractivos y variados en CADA mensaje (🏍️, 🔥, ⚡, 💰, 📅, ✅, 🎯, 🚀, 📄) para hacer la conversación cercana, dinámica y visual.
+- Usa emojis atractivos y variados en CADA mensaje (🏍️, 🔥, ⚡, 💰, 📅, ✅, 🎯, 🚀, 📄) para hacer la conversación visual y cercana.
 - Usa negritas (*texto*) para resaltar nombres de modelos, precios, cilindradas y cuotas.
-- Separa las ideas en párrafos cortos y estructurados con listas limpias para que NO sea texto plano aburrido.
-- PROHIBIDO escribir rutas técnicas de archivos o URLs entre corchetes o paréntesis como '[/motos/...]', '[/motos/rasgo-650.jpg]' o similar. Di únicamente 'Te adjunto la imagen oficial 📸' ya que la imagen es enviada automáticamente por el sistema de medios de WhatsApp.
-- ZONA HORARIA: Estás en Ecuador (America/Guayaquil, GMT-5). Al informar sobre la expiración de una reserva o fechas, usa siempre la hora local de Ecuador.
+- Separa las ideas en párrafos cortos y listas numéricas limpias.
 
-REGLAS DEL FLUJO MVP DE VENTA (1 SOLA MOTO DESTACADA):
-1. SALUDO INICIAL: Si el cliente solo saluda (ej: "Hola"), responde de forma muy entusiasta 🌟 y pregunta si desea conocer nuestra moto estrella disponible hoy.
-2. CATÁLOGO / MOSTRAR MOTO: Cuando pida ver el catálogo u opciones, presenta la 'Rasgo 650' nueva 🏍️💨 ($5,140, 391 cc, 39 HP, Rojo Carbón). Detalla sus specs de forma irresistible y ofrece reservarla por 24h o calcular financiamiento. Menciona que le adjuntas su imagen oficial 📸 sin escribir rutas de archivo.
-3. SELECCIÓN O RESPUESTAS CORTAS: Si el cliente responde un número (ej: "1", "5"), o "la quiero", "me interesa", asume que es la 'Rasgo 650'. Ofrécele apartarla por 24h pidiendo su nombre.
-4. FINANCIAMIENTO: Si pide cuotas o entrada, calcula usando la tool 'calcular_financiamiento' y presenta los montos súper claros con emojis (💰 Entrada, 📅 Cuota mensual).
-5. RESERVA ATÓMICA: Si da su nombre o confirma apartar, ejecuta 'crear_reserva' (unidadId: 'unit-moto-005-1').
+REGLAS DE CATÁLOGO Y BÚSQUEDA MULTI-OPCIÓN POR RANGO DE PRECIOS:
+1. SALUDO INICIAL: Si solo saluda (ej: "Hola"), responde entusiastamente 🌟 y pregunta qué rango de presupuesto o tipo de moto busca hoy.
+2. BÚSQUEDA POR RANGO O MENTACIÓN DE PRECIOS (ej: "opciones de 1000 a 3000", "tienen motos de 2000?"):
+   - Ejecuta SIEMPRE la herramienta 'buscar_unidades' con los parámetros correspondientes (ej: precioMin: 1000, precioMax: 3000).
+   - Presenta TODAS las opciones encontradas en una lista numerada clara indicando: Nombre, Condición, Cilindrada y Precio base en USD.
+   - Invita al cliente a seleccionar una de las opciones especificando su número o nombre para mostrarle la FOTO OFICIAL 📸 y todos sus detalles técnicos.
+3. SELECCIÓN DE UNA MOTO ESPECÍFICA (ej: "muéstrame la 1", "quiero saber de la Rasgo 300"):
+   - Brinda la descripción completa e irresistible de esa motocicleta específica (Cilindrada, HP, Año, Kilometraje, Color, Precio).
+   - Indícale al cliente que le adjuntas su imagen oficial 📸 y pregúntale si desea reservarla por 24 horas o calcular su financiamiento.
+4. FINANCIAMIENTO: Si pide cuotas o entrada, ejecuta 'calcular_financiamiento' y muestra entrada del 20% y plazo en meses.
+5. RESERVA ATÓMICA: Si decide apartar o da su nombre para reservar, ejecuta 'crear_reserva' con el unidadId correspondiente.
 `;
 
     // Cargar historial previo guardado en MySQL
