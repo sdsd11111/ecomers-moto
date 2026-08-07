@@ -200,7 +200,7 @@ export default function WebChatWidget() {
             {loading && (
               <div className="flex items-center gap-2 text-steel-light font-mono text-[11px] px-2 py-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-amber animate-ping"></span>
-                <span>Consultando inventario en MySQL...</span>
+                <span>Buscando las mejores opciones para ti...</span>
               </div>
             )}
             <div ref={messagesEndRef} />
