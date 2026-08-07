@@ -2,7 +2,6 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
-import ChatWidget from "@/components/layout/ChatWidget";
 import MotoThumb from "@/components/catalog/MotoThumb";
 import ProductCard from "@/components/catalog/ProductCard";
 import BackButton from "@/components/ui/BackButton";
@@ -167,7 +166,6 @@ export default async function MotoDetailPage({
       )}
 
       <Footer />
-      <ChatWidget />
     </>
   );
 }

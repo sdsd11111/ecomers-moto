@@ -2,7 +2,6 @@ import Link from "next/link";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import SpecStrip from "@/components/layout/SpecStrip";
-import ChatWidget from "@/components/layout/ChatWidget";
 import ContactForm from "@/components/layout/ContactForm";
 import ProductCard from "@/components/catalog/ProductCard";
 import { motos } from "@/data/motos";
@@ -205,7 +204,6 @@ export default function Home() {
       </section>
 
       <Footer />
-      <ChatWidget />
     </>
   );
 }

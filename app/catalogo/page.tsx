@@ -1,7 +1,6 @@
 import { Suspense } from "react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
-import ChatWidget from "@/components/layout/ChatWidget";
 import CatalogClient from "@/components/catalog/CatalogClient";
 import { motos } from "@/data/motos";
 
@@ -23,7 +22,6 @@ export default function CatalogoPage() {
         </Suspense>
       </section>
       <Footer />
-      <ChatWidget />
     </>
   );
 }

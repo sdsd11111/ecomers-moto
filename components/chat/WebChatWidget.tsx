@@ -6,6 +6,7 @@ interface Message {
   id: string;
   sender: "user" | "bot";
   text: string;
+  mono?: string;
   imageUrl?: string | null;
   time: string;
 }
@@ -16,7 +17,7 @@ export default function WebChatWidget() {
     {
       id: "init",
       sender: "bot",
-      text: "🌟 ¡Hola! Bienvenido a Asfalto° 🏍️. ¿Qué rango de presupuesto o tipo de moto estás buscando hoy?",
+      text: "Hola 👋 ¿Buscas algo específico o quieres que te recomiende motocicletas según tu presupuesto?",
       time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
     },
   ]);
@@ -103,63 +104,55 @@ export default function WebChatWidget() {
 
   return (
     <>
-      {/* Botón flotante burbuja */}
+      {/* Botón flotante al estilo original Asfalto */}
       <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-6 right-6 z-50 flex items-center gap-2 bg-gradient-to-r from-red-600 to-red-700 text-white px-4 py-3.5 rounded-full shadow-2xl hover:scale-105 transition-transform duration-200 font-bold border border-white/20"
-        aria-label="Abrir Chat Asfalto"
+        onClick={() => setIsOpen((v) => !v)}
+        aria-label={isOpen ? "Cerrar asistente" : "Abrir asistente"}
+        className="fixed bottom-6 right-6 z-50 bg-ink text-ivory w-14 h-14 flex items-center justify-center shadow-2xl hover:bg-oxblood transition-colors rounded-none border border-white/20"
       >
-        <span className="text-xl">💬</span>
-        <span className="hidden sm:inline font-mono text-sm uppercase tracking-wider">Asistente AI Asfalto°</span>
+        {isOpen ? "✕" : "💬"}
       </button>
 
-      {/* Modal flotante de Chat */}
+      {/* Ventana modal de Chat con estética #151517 Asfalto */}
       {isOpen && (
-        <div className="fixed bottom-24 right-4 sm:right-6 w-[92vw] sm:w-[400px] h-[550px] bg-charcoal/95 backdrop-blur-xl border border-white/15 rounded-2xl shadow-2xl z-50 flex flex-col overflow-hidden animate-fadeIn">
-          {/* Header */}
-          <div className="bg-gradient-to-r from-charcoal to-black p-4 border-b border-white/10 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-red-600/20 border border-red-500/40 flex items-center justify-center text-lg">
-                🏍️
-              </div>
-              <div>
-                <h3 className="font-display font-bold text-white tracking-wide text-base">Asfalto° AI Sales Engine</h3>
-                <p className="font-mono text-[10px] text-green-400 flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></span> En línea 24/7
-                </p>
-              </div>
+        <div className="fixed bottom-24 right-4 sm:right-6 z-50 w-[92vw] sm:w-[350px] h-[520px] bg-[#151517] border border-white/10 shadow-2xl flex flex-col overflow-hidden animate-fadeIn">
+          {/* Header minimalista */}
+          <div className="bg-[#1c1c1f] px-4 py-3.5 flex items-center justify-between font-mono text-xs text-steel-light border-b border-white/10">
+            <div className="flex items-center gap-2.5">
+              <span className="w-2 h-2 rounded-full bg-amber animate-pulse" />
+              <span>Asistente Asfalto · en línea AI</span>
             </div>
             <button
               onClick={() => setIsOpen(false)}
-              className="text-white/60 hover:text-white text-xl p-1 font-bold"
+              className="text-steel hover:text-ivory text-sm"
             >
               ✕
             </button>
           </div>
 
-          {/* Formulario rápido opcional de Nombre/Teléfono */}
+          {/* Formulario rápido opcional de Nombre/Teléfono para la reserva */}
           {showContactModal && (
-            <div className="bg-red-950/90 p-3 border-b border-red-500/30 text-xs flex flex-col gap-2">
-              <p className="text-white font-mono">Ingresa tus datos para registrar tu reserva:</p>
+            <div className="bg-[#1c1c1f] p-3 border-b border-white/10 text-xs flex flex-col gap-2 font-mono">
+              <p className="text-steel-light">Ingresa tus datos para registrar tu reserva:</p>
               <div className="flex gap-2">
                 <input
                   type="text"
                   placeholder="Tu Nombre"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="bg-black/50 border border-white/20 px-2 py-1 rounded text-white text-xs w-1/2"
+                  className="bg-black/50 border border-white/20 px-2 py-1 text-ivory text-xs w-1/2 focus:outline-none"
                 />
                 <input
                   type="text"
                   placeholder="Tu Teléfono (WhatsApp)"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  className="bg-black/50 border border-white/20 px-2 py-1 rounded text-white text-xs w-1/2"
+                  className="bg-black/50 border border-white/20 px-2 py-1 text-ivory text-xs w-1/2 focus:outline-none"
                 />
               </div>
               <button
                 onClick={() => setShowContactModal(false)}
-                className="bg-red-600 hover:bg-red-500 text-white font-mono text-[10px] uppercase py-1 rounded"
+                className="bg-oxblood hover:bg-red-700 text-ivory font-mono text-[10px] uppercase py-1"
               >
                 Guardar Datos
               </button>
@@ -174,28 +167,28 @@ export default function WebChatWidget() {
                 className={`flex flex-col ${m.sender === "user" ? "items-end" : "items-start"}`}
               >
                 <div
-                  className={`max-w-[85%] p-3 rounded-2xl ${
-                    m.sender === "user"
-                      ? "bg-red-600 text-white rounded-br-none shadow-md"
-                      : "bg-white/10 text-ivory border border-white/10 rounded-bl-none shadow-md"
+                  className={`text-[13px] leading-relaxed px-3.5 py-2.5 max-w-[85%] ${
+                    m.sender === "bot"
+                      ? "bg-[#26262a] text-ivory self-start rounded-tr-md rounded-b-md"
+                      : "bg-oxblood text-ivory self-end rounded-tl-md rounded-b-md"
                   }`}
                 >
                   <p className="whitespace-pre-line leading-relaxed">{m.text}</p>
 
-                  {/* Foto de la moto desplegada dentro del chat web */}
+                  {/* Fotografía oficial desplegada dentro del chat */}
                   {m.imageUrl && (
-                    <div className="mt-2.5 rounded-lg overflow-hidden border border-white/20 bg-black/40">
+                    <div className="mt-2.5 rounded overflow-hidden border border-white/20 bg-black">
                       <img
                         src={m.imageUrl}
                         alt="Fotografía de Motocicleta"
-                        className="w-full h-40 object-cover hover:scale-105 transition-transform duration-300"
+                        className="w-full h-36 object-cover"
                       />
                     </div>
                   )}
 
                   <span
                     className={`block text-[9px] mt-1 text-right font-mono ${
-                      m.sender === "user" ? "text-white/70" : "text-white/40"
+                      m.sender === "user" ? "text-ivory/60" : "text-steel"
                     }`}
                   >
                     {m.time}
@@ -205,31 +198,29 @@ export default function WebChatWidget() {
             ))}
 
             {loading && (
-              <div className="flex items-center gap-2 text-white/50 font-mono text-[10px]">
-                <div className="w-2 h-2 rounded-full bg-red-500 animate-bounce"></div>
-                <div className="w-2 h-2 rounded-full bg-red-500 animate-bounce [animation-delay:0.2s]"></div>
-                <div className="w-2 h-2 rounded-full bg-red-500 animate-bounce [animation-delay:0.4s]"></div>
+              <div className="flex items-center gap-2 text-steel-light font-mono text-[11px] px-2 py-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber animate-ping"></span>
                 <span>Consultando inventario en MySQL...</span>
               </div>
             )}
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Formulario de Entrada */}
-          <form onSubmit={handleSendMessage} className="p-3 bg-black/80 border-t border-white/10 flex gap-2">
+          {/* Formulario de Entrada estilo Asfalto */}
+          <form onSubmit={handleSendMessage} className="flex border-t border-white/10 bg-[#151517]">
             <input
               type="text"
-              placeholder="Escribe tu mensaje o consulta..."
+              placeholder="Escribe tu mensaje..."
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              className="flex-1 bg-white/5 border border-white/15 focus:border-red-500 rounded-xl px-3 py-2 text-white text-xs outline-none transition-colors"
+              className="flex-1 bg-transparent px-4 py-3 text-sm text-ivory placeholder:text-steel focus:outline-none"
             />
             <button
               type="submit"
               disabled={loading || !input.trim()}
-              className="bg-red-600 hover:bg-red-500 disabled:opacity-50 text-white px-4 py-2 rounded-xl font-bold transition-colors text-xs flex items-center justify-center"
+              className="px-4 text-amber hover:text-white disabled:opacity-30 font-mono text-xs transition-colors"
             >
-              ➔
+              Enviar
             </button>
           </form>
         </div>
